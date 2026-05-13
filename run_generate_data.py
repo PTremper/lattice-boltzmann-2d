@@ -17,6 +17,7 @@ def _parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser()
 
+    # Set up arguments
     parser.add_argument("backend", type=str, default="numpy", choices=["numpy", "torch"],
         help="select backend: numpy or torch. Default is numpy.")
     parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"],
@@ -25,24 +26,28 @@ def _parse_args() -> argparse.Namespace:
         help="Number of simulation steps to run.")
     parser.add_argument("--burn_in", type=int, default=0,
         help="Number of burn-in steps before saving output.")
-    parser.add_argument("--save_every", type=int, default=10,
-        help="Save output every N steps")
-    parser.add_argument("--output_filename_u", type=str, default="u.npy",
-        help="Output filename for velocity field u")
-    parser.add_argument("--output_filename_rho", type=str, default="rho.npy",
-        help="Output filename for density field rho")
-    parser.add_argument("--u0", type=float, default=0.06,
-        help="Inlet velocity in x-direction (flow direction) in lattice units")
-    parser.add_argument("--nu",type=float,default=0.02,
-        help="Kinematic viscosity of the fluid in lattice units")
-    parser.add_argument("--tau",type=float,
-        help="Relaxation parameter. By default none and calculated from nu.")
+
+    # Simulation arguments
     parser.add_argument("--nx", type=int, default=400,
         help="Set domain size in x-direction")
     parser.add_argument("--ny", type=int, default=100,
         help="Set domain size in y-direction")
-    parser.add_argument("--save_rho", action="store_true",
-        help="Saving rho is disabled by default. Use this flag to save rho if you need it.")
+    parser.add_argument("--u0", type=float, default=0.06,
+        help="Inlet velocity in x-direction (flow direction) in lattice units")
+    parser.add_argument("--nu", type=float, default=0.02,
+        help="Kinematic viscosity of the fluid in lattice units")
+    parser.add_argument("--tau", type=float, default=None,
+        help="Relaxation parameter. By default none and calculated from nu.")
+
+    # Save output arguments
+    parser.add_argument("--save_every", type=int, default=10,
+        help="Save output every N steps")
+    parser.add_argument("--output_filename_u", type=str, default="u.npy",
+        help="Output filename for velocity field u")
+    parser.add_argument("--output_filename_rho", type=str, default=None,
+        help="Output filename for density field rho. Will not save if set to None. Default: None.")
+    parser.add_argument("--output_filename_geometry", type=str, default=None,
+        help="Output filename for geometry. Will not save if set to None. Default: None.")
 
     return parser.parse_args()
 # fmt: on
@@ -53,9 +58,15 @@ def main(data_path: Path) -> None:
     args = _parse_args()
 
     data_path.mkdir(parents=True, exist_ok=True)
-    save_path_u = data_path / args.output_filename_u
-    save_path_rho = data_path / args.output_filename_rho
-
+    save_path_u: Path = data_path / args.output_filename_u
+    save_path_rho: Path | None = (
+        (data_path / args.output_filename_rho) if args.output_filename_rho is not None else None
+    )
+    save_path_geometry: Path | None = (
+        (data_path / args.output_filename_geometry)
+        if args.output_filename_geometry is not None
+        else None
+    )
     # Example geometry: obstacle in center
     nx, ny = args.nx, args.ny
 
@@ -67,6 +78,9 @@ def main(data_path: Path) -> None:
         center_y=ny // 2,
         y_offset=1,
     )
+
+    if save_path_geometry is not None:
+        np.save(save_path_geometry, geometry)
 
     # load LBM implementation based on backend
     if args.backend == "numpy":
@@ -103,7 +117,7 @@ def main(data_path: Path) -> None:
     fluid = geometry == 0
     u_list = []
 
-    if args.save_rho:
+    if save_path_rho is not None:
         rho_list = []
 
     steps = args.steps
@@ -124,7 +138,7 @@ def main(data_path: Path) -> None:
             u[~fluid] = 0
             u_list.append(u.copy())
 
-            if args.save_rho:
+            if save_path_rho is not None:
                 rho[~fluid] = 0
                 rho_list.append(rho.copy())
 
@@ -138,7 +152,7 @@ def main(data_path: Path) -> None:
     np.save(save_path_u, u_total)
     print(f"Velocity data saved to {save_path_u} as numpy array of shape {u_total.shape}")
 
-    if args.save_rho:
+    if save_path_rho is not None:
         # stack rho_total along time axis, shape (time, x, y)
         rho_total = np.stack(rho_list, axis=0)
         np.save(save_path_rho, rho_total)

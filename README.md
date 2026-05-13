@@ -319,18 +319,19 @@ Command line arguments:
     - **Note that 1000 is not enough to produce vortex shedding. Vortex shedding begins at around 8000-10000.**
   - --burn_in: Number of burn-in steps before saving output. Default is 0. 
     - _Note that this default is only set to 0 to prevent confusion when expecting a full simulation when not specifying a burn in period. To develop vortex shedding, the simulation requires a considerable burn in period of at least 8000._
+
 - Simulation arguments (_defaults are set to produce vortex shedding, given enough time._):
-  - --u0: Inlet velocity in x-direction (flow direction) in lattice units. Default is `0.06`.
-  - --nu: Kinematic viscosity of the fluid in lattice units. Default is `0.02`.
-  - --tau: Relaxation parameter. _Only used as an alternative input to --nu and will overwrite it_. Default is `None`. 
   - --nx: Domain size in x-direction. Default is `400`.
   - --ny: Domain size in y-direction. Default is `100`. 
+  - --u0: Inlet velocity in x-direction (flow direction) in lattice units. Default is `0.06`.
+  - --nu: Kinematic viscosity of the fluid in lattice units. Default is `0.02`.
+  - --tau: Relaxation parameter. _Only used as an alternative input to --nu and will overwrite it if set_. Default is `None`. 
 
 - Save output arguments:
   - --save_every: Save output every N steps. Default is `10`. 
   - --output_filename_u: Output filename for velocity field u. Default is `u.npy`.
-  - --save_rho: Boolean flag that can be set to save rho, if required. Otherwise, rho is **not** saved. 
-  - --output_filename_rho: Output filename for density field rho. Default is `rho.npy`.
+  - --output_filename_geometry: Output filename for geometry. If `None`, geometry is **not** saved. Default is `None`.
+  - --output_filename_rho: Output filename for density field rho. If `None`, rho is **not** saved. Default is `None`.
 
 
 Example: 
