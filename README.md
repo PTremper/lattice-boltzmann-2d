@@ -282,7 +282,7 @@ conda install numpy matplotlib tqdm
 
 ### 2. The LBM Simulation
 
-The files `lattice_boltzmann.numpy.py` and `lattice_boltzmann.torch.py` each provide the class `LatticeBoltzmann2D`, which can run the simulation. 
+The files `lattice_boltzmann_numpy.py` and `lattice_boltzmann_torch.py` each provide the class `LatticeBoltzmann2D`, which can run the simulation. 
 
 - Simulation parameters (_defaults are set to produce vortex shedding, given enough time._):
   - `geometry`: A boolean NumPy array of shape `(nx, ny)` where `0` represents fluid and `1` represents a solid obstacle. 
